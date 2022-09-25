@@ -7,6 +7,10 @@ class Set(models.Model):
     shorthand = models.CharField(max_length=20)
     icon = models.URLField(max_length=300)
     search_uri = models.URLField(max_length=500)
+    set_type = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f'{self.shorthand} - {self.name}'
 
     def Update():
         r = requests.get('https://api.scryfall.com/sets')
@@ -21,6 +25,7 @@ class Set(models.Model):
             new_set.shorthand = d['code']
             new_set.icon = d['icon_svg_uri']
             new_set.search_uri = d['uri']
+            new_set.set_type = d['set_type']
             new_set.save()
 
 
