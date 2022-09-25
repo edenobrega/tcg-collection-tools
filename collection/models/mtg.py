@@ -1,9 +1,27 @@
+from operator import truediv
 from django.db import models
+import requests
 
 class Set(models.Model):
     name = models.CharField(max_length=100)
     shorthand = models.CharField(max_length=20)
     icon = models.URLField(max_length=300)
+    search_uri = models.URLField(max_length=500)
+
+    def Update():
+        r = requests.get('https://api.scryfall.com/sets')
+        if r.status_code != 200:
+            return
+
+        for d in r.json()['data']:
+            if d['object'] == 'set' and Set.objects.filter(name=d['name']).exists():
+                continue
+            new_set = Set()
+            new_set.name = d['name']
+            new_set.shorthand = d['code']
+            new_set.icon = d['icon_svg_uri']
+            new_set.search_uri = d['uri']
+            new_set.save()
 
 
 class Type(models.Model):
@@ -25,6 +43,9 @@ class Card(models.Model):
     collector_number = models.IntegerField(null=False)
     power = models.CharField(max_length=3)
     toughness = models.CharField(max_length=3)
+
+    def update_cards():
+        pass
 
 
 class TypeLine(models.Model):
