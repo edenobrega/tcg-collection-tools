@@ -1,0 +1,49 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+  <head>
+    {% block meta %}
+
+    {% endblock %}
+
+    {% block css %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>    
+    {% endblock %}
+
+
+    {% block js %}
+    {% endblock %}
+
+    {% block extrajs%}
+    {% endblock %}
+    <title>placeholder</title>
+  </head>
+  <body>
+    <header>
+
+    </header>
+  
+      {% if messages %}
+      <section>
+          {% for msg in messages %}
+              <!-- all django message tags mirror bootstrap, except error/danger -->
+              <aside class="alert {% if msg.tags == 'error' %}alert-danger{% else %}alert-{{ msg.tags }}{% endif %} text-center">
+                  <h3>{{ msg }}</h3>
+              </aside>
+          {% endfor %}
+      </section>
+      {% endif %}
+
+    <main class="body">
+    {% block content %}
+
+    {% endblock %}
+    </main>
+  </body>
+  <script>
+    {% block inlinejs%}
+
+    {% endblock %}
+  </script>
+</html>
