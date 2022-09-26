@@ -39,7 +39,7 @@ class mtg_set_list(View):
         )
 
 
-class mtg_view(View):
+class mtg_view_set(View):
     def get(self, request, set_code):
         pass
 
