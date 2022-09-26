@@ -7,4 +7,7 @@ class CollectionConfig(AppConfig):
 
     def ready(self):
         from .models import mtg
-        mtg.Set.Update()
+        import sys
+        if not 'manage.py' in sys.argv:
+            mtg.Set.Update()
+            mtg.Card.Update()
