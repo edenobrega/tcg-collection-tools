@@ -8,6 +8,7 @@ class CollectionConfig(AppConfig):
     def ready(self):
         from .models import mtg
         import sys
-        if not 'manage.py' in sys.argv:
+        if 'runserver' in sys.argv:
+            print('Updating MTG data')
             mtg.Set.Update()
             mtg.Card.Update()
