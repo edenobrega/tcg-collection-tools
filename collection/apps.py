@@ -9,6 +9,7 @@ class CollectionConfig(AppConfig):
         from .models import mtg
         import sys
         if 'runserver' in sys.argv:
+            if 'updatedb' in sys.argv:
+                print('hehe')
             print('Updating MTG data')
-            mtg.Set.Update()
-            mtg.Card.Update()
+            # mtg.Update()

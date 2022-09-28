@@ -4,5 +4,5 @@ from collection.models import mtg
 # Register your models here.
 admin.site.register(mtg.Card)
 admin.site.register(mtg.Set)
-admin.site.register(mtg.Type)
+admin.site.register(mtg.CardType)
 admin.site.register(mtg.TypeLine)

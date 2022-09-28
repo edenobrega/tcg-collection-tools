@@ -40,8 +40,15 @@ class mtg_set_list(View):
 
 
 class mtg_view_set(View):
-    def get(self, request, set_code):
-        pass
+    def get(self, request):
+        data = mtg.Card.objects.filter(card_set__shorthand='m19')
+        return render(
+            request,
+            'mtg/view_set.html',
+            {
+                'data': data
+            }
+        )
 
-    def post(self, request, set_code):
+    def post(self, request):
         pass
