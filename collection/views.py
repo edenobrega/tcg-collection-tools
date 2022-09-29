@@ -55,13 +55,24 @@ class mtg_view_set(View):
                     d[u] = ''
             _temp = d
 
+            # Add readable type line to dict
             type_line_str = ''
             type_line = mtg.TypeLine.objects.filter(card__id=d['id'])
             for tl in type_line:
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
             _temp['type_line'] = type_line_str
-            data.append(_temp)
 
+            # Add collected count to dict
+            collected = mtg.MTGCollected.objects.filter(owner=request.user, card__id=d['id'])
+            if collected.exists():
+                collected = collected.first()
+                _temp['normal'] = collected.normal
+                _temp['foil'] = collected.foil
+            else:
+                _temp['normal'] = 0
+                _temp['foil'] = 0
+
+            data.append(_temp)                
         return render(
             request,
             'mtg/view_set.html',
