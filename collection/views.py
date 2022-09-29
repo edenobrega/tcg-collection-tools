@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from collection.models import mtg
 
@@ -41,7 +41,9 @@ class mtg_set_list(View):
 
 class mtg_view_set(View):
     def get(self, request, set_short):
-        set_name = mtg.Set.objects.filter(shorthand=set_short).first().name
+        _temp = mtg.Set.objects.filter(shorthand=set_short).first()
+        set_name = _temp.name
+        shorthand = _temp.shorthand
 
         _data = list(mtg.Card.objects.filter(card_set__shorthand=set_short).values())
         data = []
@@ -60,7 +62,7 @@ class mtg_view_set(View):
             type_line = mtg.TypeLine.objects.filter(card__id=d['id'])
             for tl in type_line:
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
-            _temp['type_line'] = type_line_str
+            _temp['type_line'] = type_line_str.strip()
 
             # Add collected count to dict
             collected = mtg.MTGCollected.objects.filter(owner=request.user, card__id=d['id'])
@@ -78,9 +80,38 @@ class mtg_view_set(View):
             'mtg/view_set.html',
             {
                 'card_set':set_name,
-                'data': data
+                'data': data,
+                'shorthand': shorthand
             }
         )
 
     def post(self, request, set_short):
-        pass
+        data = json.loads(request.POST.get('Data'))
+        for d in data:
+            card = mtg.Card.objects.filter(
+                        id=d['id'],
+                        card_set__id=d['card_set_id'],
+                        collector_number=d['collector_number']
+                    ).first()
+
+            collection_item = mtg.MTGCollected.objects.filter(
+                owner = request.user,
+                card = card
+            )
+
+            if not collection_item.exists() and (d['foil'] > 0 or d['normal'] > 0):
+                collection_item = mtg.MTGCollected()
+                collection_item.owner = request.user
+                collection_item.card = card
+                collection_item.normal = d['normal']
+                collection_item.foil = d['foil']
+                collection_item.save()
+            elif d['foil'] > 0 or d['normal'] > 0:
+                collection_item = collection_item.first()
+                collection_item.normal = d['normal']
+                collection_item.foil = d['foil']
+                collection_item.save()
+            elif collection_item.exists() and (d['foil'] == 0 or d['normal'] == 0):
+                collection_item.delete()
+
+        return redirect('mtg_view_set', set_short=set_short)
