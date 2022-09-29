@@ -1,3 +1,135 @@
-{% for d in data %}
-<h4>{{d.name}}</h4>
-{% endfor %}
+{% extends "base.html" %}
+
+{% block extrajs%}
+<link href="https://unpkg.com/tabulator-tables@5.3.4/dist/css/tabulator.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.3.4/dist/js/tabulator.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<h2>{{card_set}}</h2>
+
+<div>
+    <select id="filter-field">
+        <option></option>
+        <option value="collector_number">Collector Number</option>
+        <option value="name">Name</option>
+        <option value="text">Text</option>
+        <option value="flavour">Flavour</option>
+        <option value="rarity">Rarity</option>
+        <option value="type_line">Types</option>
+    </select>
+
+    <select id="filter-type">
+        <option value="=">=</option>
+        <option value="<"><</option>
+        <option value="<="><=</option>
+        <option value=">">></option>
+        <option value=">=">>=</option>
+        <option value="!=">!=</option>
+        <option value="like">like</option>
+    </select>
+
+    <input id="filter-value" type="text" placeholder="value to filter">
+
+    <button id="filter-clear">Clear Filter</button>
+</div>
+
+<div id="example-table"></div>
+
+{% endblock %}
+
+<script>
+{% block inlinejs %}
+    //Define variables for input elements
+    var fieldEl = document.getElementById("filter-field");
+    var typeEl = document.getElementById("filter-type");
+    var valueEl = document.getElementById("filter-value");
+
+    //Custom filter example
+    function customFilter(data){
+        return data.car && data.rating < 3;
+    }
+
+    //Trigger setFilter function with correct parameters
+    function updateFilter(){
+        var filterVal = fieldEl.options[fieldEl.selectedIndex].value;
+        var typeVal = typeEl.options[typeEl.selectedIndex].value;
+
+        var filter = filterVal == "function" ? customFilter : filterVal;
+
+        if(filterVal == "function" ){
+            typeEl.disabled = true;
+            valueEl.disabled = true;
+        }else{
+            typeEl.disabled = false;
+            valueEl.disabled = false;
+        }
+
+        if(filterVal){
+            table.setFilter(filter,typeVal, valueEl.value);
+        }
+    }
+
+    function clearFilter(){
+        fieldEl.value = "";
+        typeEl.value = "=";
+        valueEl.value = "";
+
+        table.clearFilter();
+    }
+
+
+    //Update filters on value change
+    document.getElementById("filter-field").addEventListener("change", updateFilter);
+    document.getElementById("filter-type").addEventListener("change", updateFilter);
+    document.getElementById("filter-value").addEventListener("keyup", updateFilter);
+    document.getElementById("filter-value").addEventListener("beforeinput", testFunc);
+    function testFunc(e){
+        if (e.data == "."){
+            e.preventDefault();                
+            clearFilter();
+            return;
+        }
+
+        if(document.getElementsByClassName('tabulator-selectable').length == 1){
+            let result = document.getElementsByClassName('tabulator-selectable')[0];
+            console.log(result);
+            if(e.data == "+"){
+                console.log("Add normal");
+                e.preventDefault();
+            } else if (e.data == "-") {
+                console.log("Remove normal");
+                e.preventDefault();
+            } else if (e.data == "/"){
+                console.log("Remove foil");
+                e.preventDefault();
+            } else if (e.data == "*"){
+                console.log("Add foil");
+                e.preventDefault();
+            }            
+        }
+
+    }
+    //Clear filters on "Clear Filters" button click
+    document.getElementById("filter-clear").addEventListener("click", clearFilter);
+
+    //Build Tabulator
+    var table = new Tabulator("#example-table", {
+        pagination:"local",
+        paginationSize:20,
+        height:"90%",
+        layout:"fitColumns",
+        columns:[
+            {title:'Collector Number', field:'collector_number'},
+            {title:'Name', field:'name'},
+            {title:'Text', field:'text',height:200, formatter:'textarea'},
+            {title:'Flavour', field:'flavor',  formatter:'textarea'},
+            {title:'Rarity', field:'rarity_id'},
+            {title:'Types', field:'type_line'},
+            {title:'Owned', field:'normal_owned'},
+            {title:'Foil Owned', field:'foil_owned'}
+        ],
+        data:{{data|safe}},
+    });
+{% endblock %}    
+</script>
