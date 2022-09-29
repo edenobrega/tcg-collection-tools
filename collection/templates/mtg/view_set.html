@@ -94,37 +94,33 @@
             return;
         }
 
-        if(document.getElementsByClassName('tabulator-selectable').length == 1){
+        if(table.rowManager.activeRows.length == 1){
             e.preventDefault();
+            let _item = table.rowManager.activeRows[0];
             let new_num;
-            let item;
             if(["+", "-"].includes(e.data)){
-                new_num = Number(document
-                    .getElementsByClassName('tabulator-selectable')[0]
-                    .querySelectorAll('[tabulator-field="normal"]')[0]
-                    .textContent);                
-                item = document
-                    .getElementsByClassName('tabulator-selectable')[0]
-                    .querySelectorAll('[tabulator-field="normal"]')[0];                
+                new_num = Number(_item.data.normal);                
             }else if(["/", "*"].includes(e.data)){
-                new_num = Number(document
-                    .getElementsByClassName('tabulator-selectable')[0]
-                    .querySelectorAll('[tabulator-field="foil"]')[0]
-                    .textContent);    
-                item = document
-                    .getElementsByClassName('tabulator-selectable')[0]
-                    .querySelectorAll('[tabulator-field="foil"]')[0];
+                new_num = Number(_item.data.foil);   
             }
 
             if(e.data =="+" || e.data == "*"){
-                new_num += 1 ;               
+                new_num += 1;
+                if(e.data == "+"){
+                    table.updateData([{id:_item.data.id, normal:new_num}]);
+                }else{
+                    table.updateData([{id:_item.data.id, foil:new_num}]);
+                }
             } else if(e.data == "/" || e.data == "-"){
                 if(new_num - 1 > -1){
                     new_num -= 1;
+                    if(e.data == "-"){
+                        table.updateData([{id:_item.data.id, normal:new_num}]);
+                    }else{
+                        table.updateData([{id:_item.data.id, foil:new_num}]);
+                    }
                 }
             }
-
-            item.textContent = new_num;
         }
     }
     //Clear filters on "Clear Filters" button click
@@ -179,8 +175,7 @@
         $.ajax({
             url:"{{shorthand}}",
             type:"POST",
-            contentType: 'application/json; charset=utf-8',
-            data: data,
+            data: {Data: JSON.stringify(data)},
             headers:{
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
