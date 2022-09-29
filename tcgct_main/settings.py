@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'allauth.account',
     'collection',
     'crispy_forms',
-    'home'
+    'home',
+    'tcgct_admin'
 ]
 
 MIDDLEWARE = [
