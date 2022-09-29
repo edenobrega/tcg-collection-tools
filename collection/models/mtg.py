@@ -1,4 +1,4 @@
-from ast import Try
+from django.contrib.auth.models import User
 from django.db import models
 import requests
 
@@ -62,6 +62,12 @@ class Card(models.Model):
 class TypeLine(models.Model):
     type = models.ForeignKey(CardType, on_delete=models.CASCADE, blank=False, null=False)
     card = models.ForeignKey(Card, on_delete=models.CASCADE, blank=False, null=False)
+
+class MTGCollected(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    normal = models.IntegerField()
+    foil = models.IntegerField()
 
 # TODO: Replace exists > else with a different implementation that does not require the else
 def Update():
