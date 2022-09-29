@@ -46,37 +46,67 @@
 
     //Trigger setFilter function with correct parameters
     function updateFilter(){
-    var filterVal = fieldEl.options[fieldEl.selectedIndex].value;
-    var typeVal = typeEl.options[typeEl.selectedIndex].value;
+        var filterVal = fieldEl.options[fieldEl.selectedIndex].value;
+        var typeVal = typeEl.options[typeEl.selectedIndex].value;
 
-    var filter = filterVal == "function" ? customFilter : filterVal;
+        var filter = filterVal == "function" ? customFilter : filterVal;
 
-    if(filterVal == "function" ){
-        typeEl.disabled = true;
-        valueEl.disabled = true;
-    }else{
-        typeEl.disabled = false;
-        valueEl.disabled = false;
+        if(filterVal == "function" ){
+            typeEl.disabled = true;
+            valueEl.disabled = true;
+        }else{
+            typeEl.disabled = false;
+            valueEl.disabled = false;
+        }
+
+        if(filterVal){
+            table.setFilter(filter,typeVal, valueEl.value);
+        }
     }
 
-    if(filterVal){
-        table.setFilter(filter,typeVal, valueEl.value);
+    function clearFilter(){
+        fieldEl.value = "";
+        typeEl.value = "=";
+        valueEl.value = "";
+
+        table.clearFilter();
     }
-    }
+
 
     //Update filters on value change
     document.getElementById("filter-field").addEventListener("change", updateFilter);
     document.getElementById("filter-type").addEventListener("change", updateFilter);
     document.getElementById("filter-value").addEventListener("keyup", updateFilter);
+    document.getElementById("filter-value").addEventListener("beforeinput", testFunc);
+    function testFunc(e){
+        console.log(e);
+        console.log(e.data);
+        if(document.getElementsByClassName('tabulator-selectable').length == 1){
+            if (e.data == "."){
+                clearFilter();
+                e.preventDefault();
+                return;
+            } 
+            let result = document.getElementsByClassName('tabulator-selectable')[0];
+            console.log(result);
+            if(e.data == "+"){
+                console.log("Add normal");
+                e.preventDefault();
+            } else if (e.data == "-") {
+                console.log("Remove normal");
+                e.preventDefault();
+            } else if (e.data == "/"){
+                console.log("Remove foil");
+                e.preventDefault();
+            } else if (e.data == "*"){
+                console.log("Add foil");
+                e.preventDefault();
+            }            
+        }
 
+    }
     //Clear filters on "Clear Filters" button click
-    document.getElementById("filter-clear").addEventListener("click", function(){
-    fieldEl.value = "";
-    typeEl.value = "=";
-    valueEl.value = "";
-
-    table.clearFilter();
-    });
+    document.getElementById("filter-clear").addEventListener("click", clearFilter);
 
     //Build Tabulator
     var table = new Tabulator("#example-table", {
@@ -87,7 +117,7 @@
         columns:[
             {title:"Name", field:"name", width:200, formatter:"link", formatterParams:{
                 urlField:"shorthand",
-                urlPrefix:"viewset/",
+                urlPrefix:"view_set/",
                 target:"_blank",
             }},
             {title:"Shorthand", field:"shorthand"},
