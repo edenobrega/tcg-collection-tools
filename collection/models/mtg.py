@@ -1,9 +1,13 @@
+from ast import Try
 from django.db import models
 import requests
 
 
 class Rarity(models.Model):
     name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 class SetType(models.Model):
@@ -23,6 +27,9 @@ class Set(models.Model):
 
 class CardType(models.Model):
     name = models.CharField(max_length=300)
+
+    def __str__(self):
+        return f'{self.name}'
 
 
 # W = White
@@ -49,6 +56,8 @@ class Card(models.Model):
     image = models.URLField(null=True)
     image_flipped = models.URLField(null=True)
 
+    def __str__(self):
+        return f'{self.name} - {self.card_set.shorthand} - {self.collector_number}'
 
 class TypeLine(models.Model):
     type = models.ForeignKey(CardType, on_delete=models.CASCADE, blank=False, null=False)
@@ -57,12 +66,11 @@ class TypeLine(models.Model):
 # TODO: Replace exists > else with a different implementation that does not require the else
 def Update():
     import time
-    import traceback
-    # f = 'UNIQUE ARTWORK DUMP FROM SCRYFALL HERE' 
-    # fi = open(f+'.json', encoding='utf8') 
-    # j = json.load(fi)
-    # Get list of bulkdata
-    if False:
+    from django.conf import settings
+    if not settings.UPDATE_MTG:
+        return        
+
+    if settings.UPDATE_FROM_API:
         print('Requesting bulkdata list')
         bulk = requests.get('https://api.scryfall.com/bulk-data')
 
@@ -75,14 +83,19 @@ def Update():
 
         js = req.json()
     else:
-        f = 'C:\\Users\\edeno\\Downloads\\default-cards-20220927090638.json'
-        print('opening file')
-        fi = open(f, encoding='utf8')
-        print('file open')
-        import json
-        print('loading json')
-        js = json.load(fi)
-        print('json loaded')
+        try:
+            print('opening file')
+            fi = open(settings.MTG_FILE_LOCATION, encoding='utf8')
+            print('file open')
+            import json
+            print('loading json')
+            js = json.load(fi)
+            print('json loaded')
+        except Exception as e:
+            print(e)
+            print('loading from file failed')
+            return
+
     for _card in js:
         if 'oracle_id' in _card:
             # Check if card already exists
@@ -148,7 +161,7 @@ def Update():
             card.mana_cost = _card['mana_cost']
         if 'cmc' in _card:
             card.converted_cost = _card['cmc']
-        if 'oracle' in _card:
+        if 'oracle_text' in _card:
             card.text = _card['oracle_text']
         if 'flavor_text' in _card:
             card.flavor = _card['flavor_text']
