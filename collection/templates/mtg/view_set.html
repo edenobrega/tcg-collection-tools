@@ -70,14 +70,12 @@
         }
     }
 
-    function clearFilter(){
-        fieldEl.value = "";
+    function clearFilterPartial(){
         typeEl.value = "=";
         valueEl.value = "";
 
         table.clearFilter();
     }
-
 
     //Update filters on value change
     document.getElementById("filter-field").addEventListener("change", updateFilter);
@@ -87,31 +85,51 @@
     function testFunc(e){
         if (e.data == "."){
             e.preventDefault();                
-            clearFilter();
+            clearFilterPartial();
             return;
         }
 
         if(document.getElementsByClassName('tabulator-selectable').length == 1){
-            let result = document.getElementsByClassName('tabulator-selectable')[0];
-            console.log(result);
-            if(e.data == "+"){
-                console.log("Add normal");
-                e.preventDefault();
-            } else if (e.data == "-") {
-                console.log("Remove normal");
-                e.preventDefault();
-            } else if (e.data == "/"){
-                console.log("Remove foil");
-                e.preventDefault();
-            } else if (e.data == "*"){
-                console.log("Add foil");
-                e.preventDefault();
-            }            
-        }
+            e.preventDefault();
+            let new_num;
+            let item;
+            if(["+", "-"].includes(e.data)){
+                new_num = Number(document
+                    .getElementsByClassName('tabulator-selectable')[0]
+                    .querySelectorAll('[tabulator-field="normal"]')[0]
+                    .textContent);                
+                item = document
+                    .getElementsByClassName('tabulator-selectable')[0]
+                    .querySelectorAll('[tabulator-field="normal"]')[0];                
+            }else if(["/", "*"].includes(e.data)){
+                new_num = Number(document
+                    .getElementsByClassName('tabulator-selectable')[0]
+                    .querySelectorAll('[tabulator-field="foil"]')[0]
+                    .textContent);    
+                item = document
+                    .getElementsByClassName('tabulator-selectable')[0]
+                    .querySelectorAll('[tabulator-field="foil"]')[0];
+            }
 
+            if(e.data =="+" || e.data == "*"){
+                new_num += 1 ;               
+            } else if(e.data == "/" || e.data == "-"){
+                if(new_num - 1 > -1){
+                    new_num -= 1;
+                }
+            }
+
+            item.textContent = new_num;
+        }
     }
     //Clear filters on "Clear Filters" button click
-    document.getElementById("filter-clear").addEventListener("click", clearFilter);
+    document.getElementById("filter-clear").addEventListener("click", function(){
+        fieldEl.value = "";
+        typeEl.value = "=";
+        valueEl.value = "";
+
+        table.clearFilter();
+    });
 
     //Build Tabulator
     var table = new Tabulator("#example-table", {
