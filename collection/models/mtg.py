@@ -70,7 +70,7 @@ class MTGCollected(models.Model):
     foil = models.IntegerField()
 
     def __str__(self):
-        return f'{self.owner} | {self.card.name} | {self.normal} | {self.foil}'
+        return f'{self.owner} | {self.card.name} | {self.card.card_set.shorthand} | {self.normal} | {self.foil}'
 
 # TODO: Replace exists > else with a different implementation that does not require the else
 def Update():

@@ -29,7 +29,7 @@ class mtg_index(View):
 class mtg_set_list(View):
     def get(self, request):
         _data = list(mtg.Set.objects.all().values())
-        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name} for x in _data]
+        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
         return render(
             request,
             'mtg/sets.html',
@@ -115,3 +115,22 @@ class mtg_view_set(View):
                 collection_item.delete()
 
         return redirect('mtg_view_set', set_short=set_short)
+
+
+class mtg_my_sets(View):
+    def get(self, request):
+        shorts = mtg.MTGCollected.objects.filter(owner=request.user)
+        # Get all unique set codes from above
+        # TODO: Probably a better way to do this in one line
+        shorts = list(set([s.card.card_set.shorthand for s in shorts]))
+
+        _data = list(mtg.Set.objects.filter(shorthand__in=shorts).values())
+        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
+
+        return render(
+            request,
+            'mtg/sets.html',
+            {
+                'data': data
+            }
+        )
