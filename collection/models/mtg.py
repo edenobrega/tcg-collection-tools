@@ -74,10 +74,11 @@ class MTGCollected(models.Model):
 
 # TODO: Replace exists > else with a different implementation that does not require the else
 def Update():
-    import time
     from django.conf import settings
     if not settings.UPDATE_MTG:
-        return        
+        return    
+
+    import time
 
     if settings.UPDATE_FROM_API:
         print('Requesting bulkdata list')
