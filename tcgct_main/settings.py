@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+if os.path.exists('env.py'):
+    import env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=(rzc0ezge#e1di3+i_8ilrc0mhc)kko7&22po!d^3np@99_n3'
-UPDATE_FROM_API = False
-MTG_FILE_LOCATION = ''
-UPDATE_MTG = False
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.environ.get('DJANGO_SECRET')
+UPDATE_FROM_API = os.environ.get('UPDATE_FROM_API')
+MTG_FILE_LOCATION = os.environ.get('MTG_FILE_LOCATION')
+UPDATE_MTG = os.environ.get('MTG_UPDATE')
+DEBUG = os.environ.get('DEBUG')
+
 
 ALLOWED_HOSTS = []
 
@@ -132,3 +134,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+
