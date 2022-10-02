@@ -127,9 +127,16 @@ class mtg_my_sets(View):
         _data = list(mtg.Set.objects.filter(shorthand__in=shorts).values())
         data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
 
+        for d in data:
+            card_count = mtg.Card.objects.filter(card_set__shorthand=d['shorthand']).__len__()
+            d['card_count'] = card_count
+            collected_cards = mtg.MTGCollected.objects.filter(owner=request.user, card__card_set__shorthand=d['shorthand'])
+            d['single_card_collected_normal'] = len(collected_cards.filter(normal__gte=1))
+            d['set_collected_normal'] = len(collected_cards.filter(normal__gte=4))
+
         return render(
             request,
-            'mtg/sets.html',
+            'mtg/collection_sets.html',
             {
                 'data': data
             }
