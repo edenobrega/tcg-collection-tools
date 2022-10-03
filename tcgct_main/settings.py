@@ -24,10 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET')
-UPDATE_FROM_API = os.environ.get('UPDATE_FROM_API')
+UPDATE_FROM_API = os.environ.get('UPDATE_FROM_API') == 'True'
 MTG_FILE_LOCATION = os.environ.get('MTG_FILE_LOCATION')
-UPDATE_MTG = os.environ.get('MTG_UPDATE')
-DEBUG = os.environ.get('DEBUG')
+UPDATE_MTG = os.environ.get('MTG_UPDATE') == 'True'
+DEBUG = os.environ.get('DEBUG') == 'True'
 
 
 ALLOWED_HOSTS = []
@@ -134,6 +134,3 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-
