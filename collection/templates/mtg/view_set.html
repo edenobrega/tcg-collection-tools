@@ -88,6 +88,10 @@
     document.getElementById("filter-value").addEventListener("keyup", updateFilter);
     document.getElementById("filter-value").addEventListener("beforeinput", testFunc);
     function testFunc(e){
+        console.log(e);
+        if(isNaN(e.data) === false){
+            return;
+        }
         if (e.data == "."){
             e.preventDefault();                
             clearFilterPartial();
