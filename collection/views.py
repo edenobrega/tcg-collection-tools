@@ -2,6 +2,15 @@ import json
 from django.shortcuts import render, redirect
 from django.views import View
 from collection.models import mtg
+from collection.forms import MTGSearchForm
+from difflib import SequenceMatcher
+from django.db.models import Q
+
+
+def similar(a, b):
+    if a.lower() in b.lower() or b.lower() in a.lower():
+        return 1
+    return SequenceMatcher(None, a.lower(), b.lower()).ratio()
 
 
 class index(View):
@@ -47,7 +56,6 @@ class mtg_view_set(View):
 
         _data = list(mtg.Card.objects.filter(card_set__shorthand=set_short).values())
         data = []
-
         for d in _data:
             for u in d:
                 if u == 'rarity_id':
@@ -139,5 +147,100 @@ class mtg_my_sets(View):
             'mtg/collection_sets.html',
             {
                 'data': data
+            }
+        )
+
+
+class mtg_search_cards(View):
+    def get(self, request):
+        form = MTGSearchForm()
+        return render(
+            request,
+            'mtg/search_cards.html',
+            {
+                'form':form
+            }
+        )
+
+
+class mtg_search_results(View):
+    def get(self, request):
+        query = Q()
+        name_ = request.GET['name']
+        converted_cost_ = request.GET['converted_cost']
+        card_set_ = request.GET['card_set']
+        types_ = request.GET['types']
+        power_ = request.GET['power']
+        toughness_ = request.GET['toughness']
+
+        if name_:
+            query &= Q(name=name_)
+        if converted_cost_:
+            query &= Q(converted_cost=converted_cost_)
+        if card_set_:
+            query &= Q(card_set__id=card_set_)
+        if power_:
+            query &= Q(power=power_)
+        if toughness_:
+            query &= Q(toughness=toughness_)
+
+        cards = mtg.Card.objects.filter(query)
+
+        if types_:
+            types = request.GET['types'].split(',')
+            if '—' in types:
+                types.remove('—')
+            if '//' in types:
+                types.remove('//')
+            if '' in types:
+                types.remove('')
+            types = set(types)            
+            type_lines = mtg.TypeLine.objects.filter(card__in=cards.values('id'))
+            pop = []        
+            for c in cards:
+                temp = [i['type__name'] for i in list(type_lines.filter(card=c).values('type__name'))]
+                if '—' in temp:
+                    temp.remove('—')
+                if '//' in temp:
+                    temp.remove('//')
+                if '' in temp:
+                    temp.remove('')
+                if types.issubset(set(temp)):
+                    continue
+                pop.append(c)
+            
+            cards = set(cards) - set(pop)
+        
+        cards = list(cards)
+        data = []
+        for c in cards:
+            card_dict = {}
+            card_dict['collector_number'] = c.collector_number 
+            card_dict['name'] = c.name
+            card_dict['text'] =  c.text
+            card_dict['flavor'] = c.flavor or ''
+            card_dict['rarity_id'] = c.rarity.name.capitalize()
+
+            type_line_str = ''
+            type_line = mtg.TypeLine.objects.filter(card=c)
+            for tl in type_line:
+                type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
+            card_dict['type_line'] = type_line_str.strip()
+            
+            collected = mtg.MTGCollected.objects.filter(owner=request.user, card=c)
+            if collected.exists():
+                card_dict['normal'] = collected.normal
+                card_dict['foil'] = collected.foil
+            else:
+                card_dict['normal'] = 0
+                card_dict['foil'] = 0
+            data.append(card_dict)
+        return render(
+            request,
+            'mtg/view_set.html',
+            {
+                'card_set':'card_set',
+                'data': data,
+                'shorthand': 'tsp'
             }
         )
