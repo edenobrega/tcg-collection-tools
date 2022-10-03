@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block extrajs %}
+<script
+    src="https://code.jquery.com/jquery-3.6.1.min.js"
+    integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ="
+    crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<form method="get" action="{% url 'mtg_results' %}" enctype="multipart/form-data">
+    {{form|crispy}}
+    <hr>
+    <button type="submit">Search</button>
+</form>
+{% endblock %}
+
+<script>
+    {% block inlinejs %}
+    $('#id_types_select').change(function(){
+        let prev = $('#id_types').val() + "," + $('#id_types_select option:selected').text();
+        $('#id_types').val(prev);
+    });
+    {% endblock %}
+</script>
