@@ -164,7 +164,9 @@ class mtg_search_cards(View):
 
 
 class mtg_search_results(View):
+    # TODO: large searches are very slow, instead of loading all should perhaps load it into pages and serve one at a time, or just find a faster way to filter
     def get(self, request):
+        cards = []
         query = Q()
         name_ = request.GET['name']
         converted_cost_ = request.GET['converted_cost']
@@ -184,7 +186,10 @@ class mtg_search_results(View):
         if toughness_:
             query &= Q(toughness=toughness_)
 
-        cards = mtg.Card.objects.filter(query)
+        # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
+
+        if query != Q():
+            cards = list(mtg.Card.objects.filter(query))
 
         if types_:
             types = request.GET['types'].split(',')
@@ -194,30 +199,40 @@ class mtg_search_results(View):
                 types.remove('//')
             if '' in types:
                 types.remove('')
-            types = set(types)            
-            type_lines = mtg.TypeLine.objects.filter(card__in=cards.values('id'))
-            pop = []        
-            for c in cards:
-                temp = [i['type__name'] for i in list(type_lines.filter(card=c).values('type__name'))]
-                if '—' in temp:
-                    temp.remove('—')
-                if '//' in temp:
-                    temp.remove('//')
-                if '' in temp:
-                    temp.remove('')
-                if types.issubset(set(temp)):
-                    continue
-                pop.append(c)
-            
-            cards = set(cards) - set(pop)
+
+            types_set = set(types)     
+           
+            if cards == []:
+                type_ = mtg.CardType.objects.filter(name=types[-1])
+                # list of those that have atleast one of asked for type
+                typeline = mtg.TypeLine.objects.filter(type=type_.first())
+
+                for tl in typeline:
+                    ctypes = mtg.TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=tl.card)
+                    if len(ctypes) < len(types):
+                        continue
+                    type_line_list = [x.type.name for x in ctypes]
+                    if types_set.issubset(set(type_line_list)):
+                        cards.append(tl.card)
+            else:
+                cards_ = list(cards)
+                cards = []
+                for c in cards_:
+                    ctypes = mtg.TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=c)
+                    if len(ctypes) < len(types):
+                        continue
+                    type_line_list = [x.type.name for x in ctypes]
+                    if types_set.issubset(set(type_line_list)):
+                        cards.append(c)
+
         
-        cards = list(cards)
         data = []
+        # TODO: should return the set of eachcard instead of collector number, thats useless when cards from multiple sets are mixed together        
         for c in cards:
             card_dict = {}
             card_dict['collector_number'] = c.collector_number 
             card_dict['name'] = c.name
-            card_dict['text'] =  c.text
+            card_dict['text'] =  c.text or ''
             card_dict['flavor'] = c.flavor or ''
             card_dict['rarity_id'] = c.rarity.name.capitalize()
 
@@ -229,18 +244,19 @@ class mtg_search_results(View):
             
             collected = mtg.MTGCollected.objects.filter(owner=request.user, card=c)
             if collected.exists():
-                card_dict['normal'] = collected.normal
-                card_dict['foil'] = collected.foil
+                card_dict['normal'] = collected.first().normal
+                card_dict['foil'] = collected.first().foil
             else:
                 card_dict['normal'] = 0
                 card_dict['foil'] = 0
             data.append(card_dict)
+
         return render(
             request,
             'mtg/view_set.html',
             {
-                'card_set':'card_set',
+                'card_set':'Custom Search',
                 'data': data,
-                'shorthand': 'tsp'
+                'shorthand': 'n/a'
             }
         )
