@@ -1,2 +1,27 @@
 {% extends "base.html" %}
 {% load static %}
+
+{% block content %}
+<h2>How to use</h2>
+<ul>
+    <li>To add a card or set to your account:
+        <ol>
+            <li>Select Collections in the navbar</li>
+            <li>Select game your collecting</li>
+            <li>Select "View All Sets"</li>
+            <li>Search for the set you want to add the card from</li>
+            <li>Search for the card using the searchbar, make sure only a single result appears in the table, the best way to get this would be that games unique identifier, e.g. for mtg it is "Collectors Number"</li>
+            <li>When a single result is in the table, use one of the following keys to add or remove a card: 
+                <ul>
+                    <li>+: Add a normal card</li>
+                    <li>-: Remove a card</li>
+                    <li>*: Add a foil card</li>
+                    <li>/: Remove a foil card</li>
+                </ul>
+            </li>
+            <li>Press Save</li>
+        </ol>
+    </li>
+    <li>All sets that you own atleast one card from will appear in the your sets page</li>
+</ul>
+{% endblock %}
