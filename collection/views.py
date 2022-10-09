@@ -129,7 +129,6 @@ class mtg_my_sets(View):
     def get(self, request):
         shorts = mtg.MTGCollected.objects.filter(owner=request.user)
         # Get all unique set codes from above
-        # TODO: Probably a better way to do this in one line
         shorts = list(set([s.card.card_set.shorthand for s in shorts]))
 
         _data = list(mtg.Set.objects.filter(shorthand__in=shorts).values())
@@ -164,13 +163,11 @@ class mtg_search_cards(View):
 
 
 class mtg_search_results(View):
-    # TODO: large searches are very slow, instead of loading all should perhaps load it into pages and serve one at a time, or just find a faster way to filter
     def get(self, request):
         cards = []
         query = Q()
         name_ = request.GET['name']
         converted_cost_ = request.GET['converted_cost']
-        card_set_ = request.GET['card_set']
         types_ = request.GET['types']
         power_ = request.GET['power']
         toughness_ = request.GET['toughness']
@@ -179,17 +176,18 @@ class mtg_search_results(View):
             query &= Q(name=name_)
         if converted_cost_:
             query &= Q(converted_cost=converted_cost_)
-        if card_set_:
-            query &= Q(card_set__id=card_set_)
         if power_:
             query &= Q(power=power_)
         if toughness_:
             query &= Q(toughness=toughness_)
 
-        # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
+        if 'search_collection' in request.GET:
+            collected_ = mtg.MTGCollected.objects.filter(owner=request.user)
+            cards = [c.card for c in collected_]
 
+        # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
         if query != Q():
-            cards = list(mtg.Card.objects.filter(query))
+            cards = cards + list(mtg.Card.objects.filter(query))
 
         if types_:
             types = request.GET['types'].split(',')
@@ -225,7 +223,7 @@ class mtg_search_results(View):
                     if types_set.issubset(set(type_line_list)):
                         cards.append(c)
 
-        
+
         data = []
         # TODO: should return the set of eachcard instead of collector number, thats useless when cards from multiple sets are mixed together        
         for c in cards:
@@ -241,7 +239,7 @@ class mtg_search_results(View):
             for tl in type_line:
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
             card_dict['type_line'] = type_line_str.strip()
-            
+
             collected = mtg.MTGCollected.objects.filter(owner=request.user, card=c)
             if collected.exists():
                 card_dict['normal'] = collected.first().normal
@@ -260,3 +258,4 @@ class mtg_search_results(View):
                 'shorthand': 'n/a'
             }
         )
+

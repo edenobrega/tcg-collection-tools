@@ -59,7 +59,7 @@ class Card(models.Model):
     def __str__(self):
         return f'{self.name} - {self.card_set.shorthand} - {self.collector_number}'
 
-# TODO: need to get rid of — somehow, or maybe its good that it stays in
+
 class TypeLine(models.Model):
     type = models.ForeignKey(CardType, on_delete=models.CASCADE, blank=False, null=False)
     card = models.ForeignKey(Card, on_delete=models.CASCADE, blank=False, null=False)
