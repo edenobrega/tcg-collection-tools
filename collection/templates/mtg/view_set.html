@@ -183,6 +183,11 @@
             headers:{
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             },
+            
+        });
+
+        $(document).ajaxSuccess(function(event, xhr,settings){
+            window.location.href = '/collection/mtg/';
         });
     }
 {% endblock %}    
