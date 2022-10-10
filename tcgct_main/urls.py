@@ -15,8 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from tcgct_admin import views as tcgav
 
 urlpatterns = [
+    path('login', tcgav.login_view.as_view(), name='login_view'),
+    path('logout', tcgav.logout_view, name='logout_view'),
+    path('register', tcgav.register_view.as_view(), name='register_view'),
     path('', include('home.urls')),
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
