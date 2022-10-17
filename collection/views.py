@@ -72,6 +72,8 @@ class mtg_view_set(View):
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
             _temp['type_line'] = type_line_str.strip()
 
+            _temp['image_url'] = d['image']
+
             # Add collected count to dict
             collected = mtg.MTGCollected.objects.filter(owner=request.user, card__id=d['id'])
             if collected.exists():

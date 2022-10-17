@@ -150,7 +150,10 @@
             {title:'Rarity', field:'rarity_id'},
             {title:'Types', field:'type_line'},
             {title:'Owned', field:'normal'},
-            {title:'Foil Owned', field:'foil'}
+            {title:'Foil Owned', field:'foil'},
+            {title:'Image', field:'image', formatter:'image', formatterParams:{
+                height:'200px'
+            }}
         ],
         data:{{data|safe}},
     });
