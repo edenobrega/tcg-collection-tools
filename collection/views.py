@@ -37,8 +37,8 @@ class mtg_index(View):
 
 class mtg_set_list(View):
     def get(self, request):
-        _data = list(mtg.Set.objects.all().values())
-        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
+        _data = list(mtg.MTG_Set.objects.all().values())
+        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.MTG_SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
         return render(
             request,
             'mtg/sets.html',
@@ -50,16 +50,16 @@ class mtg_set_list(View):
 
 class mtg_view_set(View):
     def get(self, request, set_short):
-        _temp = mtg.Set.objects.filter(shorthand=set_short).first()
+        _temp = mtg.MTG_Set.objects.filter(shorthand=set_short).first()
         set_name = _temp.name
         shorthand = _temp.shorthand
 
-        _data = list(mtg.Card.objects.filter(card_set__shorthand=set_short).values())
+        _data = list(mtg.MTG_Card.objects.filter(card_set__shorthand=set_short).values())
         data = []
         for d in _data:
             for u in d:
                 if u == 'rarity_id':
-                    d[u] = mtg.Rarity.objects.filter(id=d[u]).first().name.capitalize()
+                    d[u] = mtg.MTG_Rarity.objects.filter(id=d[u]).first().name.capitalize()
                 if d[u] == None:
                     # None cannot be used in tabulator
                     d[u] = ''
@@ -67,7 +67,7 @@ class mtg_view_set(View):
 
             # Add readable type line to dict
             type_line_str = ''
-            type_line = mtg.TypeLine.objects.filter(card__id=d['id'])
+            type_line = mtg.MTG_TypeLine.objects.filter(card__id=d['id'])
             for tl in type_line:
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
             _temp['type_line'] = type_line_str.strip()
@@ -75,7 +75,7 @@ class mtg_view_set(View):
             _temp['image_url'] = d['image']
 
             # Add collected count to dict
-            collected = mtg.MTGCollected.objects.filter(owner=request.user, card__id=d['id'])
+            collected = mtg.MTG_Collected.objects.filter(owner=request.user, card__id=d['id'])
             if collected.exists():
                 collected = collected.first()
                 _temp['normal'] = collected.normal
@@ -98,19 +98,19 @@ class mtg_view_set(View):
     def post(self, request, set_short):
         data = json.loads(request.POST.get('Data'))
         for d in data:
-            card = mtg.Card.objects.filter(
+            card = mtg.MTG_Card.objects.filter(
                         id=d['id'],
                         card_set__id=d['card_set_id'],
                         collector_number=d['collector_number']
                     ).first()
 
-            collection_item = mtg.MTGCollected.objects.filter(
+            collection_item = mtg.MTG_Collected.objects.filter(
                 owner = request.user,
                 card = card
             )
 
             if not collection_item.exists() and (d['foil'] > 0 or d['normal'] > 0):
-                collection_item = mtg.MTGCollected()
+                collection_item = mtg.MTG_Collected()
                 collection_item.owner = request.user
                 collection_item.card = card
                 collection_item.normal = d['normal']
@@ -129,17 +129,17 @@ class mtg_view_set(View):
 
 class mtg_my_sets(View):
     def get(self, request):
-        shorts = mtg.MTGCollected.objects.filter(owner=request.user)
+        shorts = mtg.MTG_Collected.objects.filter(owner=request.user)
         # Get all unique set codes from above
         shorts = list(set([s.card.card_set.shorthand for s in shorts]))
 
-        _data = list(mtg.Set.objects.filter(shorthand__in=shorts).values())
-        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
+        _data = list(mtg.MTG_Set.objects.filter(shorthand__in=shorts).values())
+        data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.MTG_SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
 
         for d in data:
-            card_count = mtg.Card.objects.filter(card_set__shorthand=d['shorthand']).__len__()
+            card_count = mtg.MTG_Card.objects.filter(card_set__shorthand=d['shorthand']).__len__()
             d['card_count'] = card_count
-            collected_cards = mtg.MTGCollected.objects.filter(owner=request.user, card__card_set__shorthand=d['shorthand'])
+            collected_cards = mtg.MTG_Collected.objects.filter(owner=request.user, card__card_set__shorthand=d['shorthand'])
             d['single_card_collected_normal'] = len(collected_cards.filter(normal__gte=1))
             d['set_collected_normal'] = len(collected_cards.filter(normal__gte=4))
 
@@ -184,12 +184,12 @@ class mtg_search_results(View):
             query &= Q(toughness=toughness_)
 
         if 'search_collection' in request.GET:
-            collected_ = mtg.MTGCollected.objects.filter(owner=request.user)
+            collected_ = mtg.MTG_Collected.objects.filter(owner=request.user)
             cards = [c.card for c in collected_]
 
         # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
         if query != Q():
-            cards = cards + list(mtg.Card.objects.filter(query))
+            cards = cards + list(mtg.MTG_Card.objects.filter(query))
 
         if types_:
             types = request.GET['types'].split(',')
@@ -203,12 +203,12 @@ class mtg_search_results(View):
             types_set = set(types)     
            
             if cards == []:
-                type_ = mtg.CardType.objects.filter(name=types[-1])
+                type_ = mtg.MTG_CardType.objects.filter(name=types[-1])
                 # list of those that have atleast one of asked for type
-                typeline = mtg.TypeLine.objects.filter(type=type_.first())
+                typeline = mtg.MTG_TypeLine.objects.filter(type=type_.first())
 
                 for tl in typeline:
-                    ctypes = mtg.TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=tl.card)
+                    ctypes = mtg.MTG_TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=tl.card)
                     if len(ctypes) < len(types):
                         continue
                     type_line_list = [x.type.name for x in ctypes]
@@ -218,7 +218,7 @@ class mtg_search_results(View):
                 cards_ = list(cards)
                 cards = []
                 for c in cards_:
-                    ctypes = mtg.TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=c)
+                    ctypes = mtg.MTG_TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=c)
                     if len(ctypes) < len(types):
                         continue
                     type_line_list = [x.type.name for x in ctypes]
@@ -237,12 +237,12 @@ class mtg_search_results(View):
             card_dict['rarity_id'] = c.rarity.name.capitalize()
 
             type_line_str = ''
-            type_line = mtg.TypeLine.objects.filter(card=c)
+            type_line = mtg.MTG_TypeLine.objects.filter(card=c)
             for tl in type_line:
                 type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
             card_dict['type_line'] = type_line_str.strip()
 
-            collected = mtg.MTGCollected.objects.filter(owner=request.user, card=c)
+            collected = mtg.MTG_Collected.objects.filter(owner=request.user, card=c)
             if collected.exists():
                 card_dict['normal'] = collected.first().normal
                 card_dict['foil'] = collected.first().foil

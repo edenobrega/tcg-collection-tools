@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='Rarity',
+            name='MTG_Rarity',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(max_length=20)),
@@ -38,7 +38,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='card',
             name='rarity',
-            field=models.ForeignKey(default='', on_delete=django.db.models.deletion.CASCADE, to='collection.rarity'),
+            field=models.ForeignKey(default='', on_delete=django.db.models.deletion.CASCADE, to='collection.MTG_Rarity'),
             preserve_default=False,
         ),
         migrations.AlterField(

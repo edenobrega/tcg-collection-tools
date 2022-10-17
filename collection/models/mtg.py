@@ -3,29 +3,29 @@ from django.db import models
 import requests
 
 
-class Rarity(models.Model):
+class MTG_Rarity(models.Model):
     name = models.CharField(max_length=20)
 
     def __str__(self):
         return f'{self.name}'
 
 
-class SetType(models.Model):
+class MTG_SetType(models.Model):
     name = models.CharField(max_length=50)
 
 
-class Set(models.Model):
+class MTG_Set(models.Model):
     name = models.CharField(max_length=100)
     shorthand = models.CharField(max_length=20)
     icon = models.URLField(max_length=300)
     search_uri = models.URLField(max_length=500)
-    set_type = models.ForeignKey(SetType, on_delete=models.CASCADE)
+    set_type = models.ForeignKey(MTG_SetType, on_delete=models.CASCADE)
 
     def __str__(self):
         return f'{self.shorthand} - {self.name}'
 
 
-class CardType(models.Model):
+class MTG_CardType(models.Model):
     name = models.CharField(max_length=300)
 
     def __str__(self):
@@ -37,9 +37,9 @@ class CardType(models.Model):
 # B = Black
 # R = Red
 # G = Green
-class Card(models.Model):
+class MTG_Card(models.Model):
     name = models.CharField(max_length=200)
-    card_set = models.ForeignKey(Set, on_delete=models.CASCADE, blank=False, null=False)
+    card_set = models.ForeignKey(MTG_Set, on_delete=models.CASCADE, blank=False, null=False)
     mana_cost = models.CharField(max_length=50)
     converted_cost = models.IntegerField(null=True)  
     text = models.CharField(max_length=1000, null=True)
@@ -51,7 +51,7 @@ class Card(models.Model):
     scryfall_id = models.CharField(max_length=36)
     oracle_id = models.CharField(max_length=36)
 
-    rarity = models.ForeignKey(Rarity, on_delete=models.CASCADE)
+    rarity = models.ForeignKey(MTG_Rarity, on_delete=models.CASCADE)
     # image will be face, flipped will be back
     image = models.URLField(null=True)
     image_flipped = models.URLField(null=True)
@@ -60,17 +60,17 @@ class Card(models.Model):
         return f'{self.name} - {self.card_set.shorthand} - {self.collector_number}'
 
 
-class TypeLine(models.Model):
-    type = models.ForeignKey(CardType, on_delete=models.CASCADE, blank=False, null=False)
-    card = models.ForeignKey(Card, on_delete=models.CASCADE, blank=False, null=False)
+class MTG_TypeLine(models.Model):
+    type = models.ForeignKey(MTG_CardType, on_delete=models.CASCADE, blank=False, null=False)
+    card = models.ForeignKey(MTG_Card, on_delete=models.CASCADE, blank=False, null=False)
 
     def __str__(self):
         return f'{self.card.name} - {self.type.name}'
 
 
-class MTGCollected(models.Model):
+class MTG_Collected(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE)
-    card = models.ForeignKey(Card, on_delete=models.CASCADE)
+    card = models.ForeignKey(MTG_Card, on_delete=models.CASCADE)
     normal = models.IntegerField()
     foil = models.IntegerField()
 
@@ -114,14 +114,14 @@ def Update():
     for _card in js:
         if 'oracle_id' in _card:
             # Check if card already exists
-            exist = Card.objects.filter(
+            exist = MTG_Card.objects.filter(
                 name=_card['name'],
                 oracle_id=_card['oracle_id'],
                 card_set__shorthand=_card['set'],
                 collector_number=_card['collector_number']
             )
         else:
-            exist = Card.objects.filter(
+            exist = MTG_Card.objects.filter(
                 name=_card['name'],
                 oracle_id=_card['card_faces'][0]['oracle_id'],
                 card_set__shorthand=_card['set'],
@@ -130,22 +130,22 @@ def Update():
 
         if exist.exists():
             exist = exist.first()
-            print(f'Card: {exist.name} of set: {exist.card_set.name} Exists')
+            print(f'MTG_Card: {exist.name} of set: {exist.card_set.name} Exists')
             continue
 
         # Check if set is in db, and update if not
-        card_set = Set.objects.filter(
+        card_set = MTG_Set.objects.filter(
             shorthand=_card['set']
         )
 
-        set_type = SetType.objects.filter(
+        set_type = MTG_SetType.objects.filter(
             name=_card['set_type']
         )
 
         if not set_type.exists():
             _temp = _card['set_type']
-            print(f'Set Type {_temp} does not exist, creating')
-            set_type = SetType()
+            print(f'MTG_Set Type {_temp} does not exist, creating')
+            set_type = MTG_SetType()
             set_type.name = _card['set_type']
             set_type.save()
         else:
@@ -153,8 +153,8 @@ def Update():
 
         if not card_set.exists():
             _temp = _card['set_name'] + '|' + _card['set']
-            print(f'Set {_temp} does not exist, creating')
-            card_set = Set()
+            print(f'MTG_Set {_temp} does not exist, creating')
+            card_set = MTG_Set()
             card_set.name = _card['set_name']
             card_set.shorthand = _card['set']
             card_set.search_uri = _card['set_uri']          
@@ -169,7 +169,7 @@ def Update():
         else:
             card_set = card_set.first()
 
-        card = Card()
+        card = MTG_Card()
         card.name = _card['name']
         card.card_set = card_set
         if 'mana_cost' in _card:
@@ -202,11 +202,11 @@ def Update():
         else:
             card.oracle_id = _card['card_faces'][0]['oracle_id']
 
-        _rarity = Rarity.objects.filter(name=_card['rarity'])
+        _rarity = MTG_Rarity.objects.filter(name=_card['rarity'])
         if not _rarity.exists():
             _temp = _card['rarity']
-            print(f'Rarity {_temp} does not exist, creating')
-            _rarity = Rarity()
+            print(f'MTG_Rarity {_temp} does not exist, creating')
+            _rarity = MTG_Rarity()
             _rarity.name = _card['rarity']
             _rarity.save()
         else:
@@ -219,15 +219,15 @@ def Update():
         else:
             _types = [u.upper() for u in _card['card_faces'][0]['type_line'].replace('-', '').split(' ') if u != '']
         for ct in _types:
-            cardtype = CardType.objects.filter(name=ct)
+            cardtype = MTG_CardType.objects.filter(name=ct)
             if not cardtype.exists():
-                print(f'Card Type {ct} does not exist, creating')
-                cardtype = CardType()
+                print(f'MTG_Card Type {ct} does not exist, creating')
+                cardtype = MTG_CardType()
                 cardtype.name = ct
                 cardtype.save()
             else:
                 cardtype = cardtype.first()
-            typeline = TypeLine()
+            typeline = MTG_TypeLine()
             typeline.card = card
             typeline.type = cardtype
             typeline.save()

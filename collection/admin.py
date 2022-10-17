@@ -2,8 +2,8 @@ from django.contrib import admin
 from collection.models import mtg
 
 # Register your models here.
-admin.site.register(mtg.Card)
-admin.site.register(mtg.Set)
-admin.site.register(mtg.CardType)
-admin.site.register(mtg.TypeLine)
-admin.site.register(mtg.MTGCollected)
+admin.site.register(mtg.MTG_Card)
+admin.site.register(mtg.MTG_Set)
+admin.site.register(mtg.MTG_CardType)
+admin.site.register(mtg.MTG_TypeLine)
+admin.site.register(mtg.MTG_Collected)
