@@ -160,7 +160,7 @@
 
     function submit(){
         let data = table.getData();
-        // Remove pointless data for faster request, gotta get that extra 0.1ms B) B) B)
+        // Remove pointless data for faster request, gotta get that extra 0.1ms
         // TODO: should probably find way to remove data that has not been changed
         for (let index = 0; index < data.length; index++) {
             delete data[index]["artist"];
