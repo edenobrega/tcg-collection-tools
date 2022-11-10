@@ -18,17 +18,13 @@ if os.path.exists('env.py'):
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET')
-UPDATE_FROM_API = os.environ.get('UPDATE_FROM_API') == 'True'
-MTG_FILE_LOCATION = os.environ.get('MTG_FILE_LOCATION')
-UPDATE_MTG = os.environ.get('MTG_UPDATE') == 'True'
 DEBUG = os.environ.get('DEBUG') == 'True'
-
+LOGIN_URL = 'login_view'
 
 ALLOWED_HOSTS = []
 

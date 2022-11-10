@@ -5,6 +5,7 @@ from collection.models import mtg
 from collection.forms import MTGSearchForm
 from difflib import SequenceMatcher
 from django.db.models import Q
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 def similar(a, b):
@@ -39,6 +40,9 @@ class mtg_set_list(View):
     def get(self, request):
         _data = list(mtg.MTG_Set.objects.all().values())
         data = [{'name':x['name'], 'shorthand':x['shorthand'], 'set_type':mtg.MTG_SetType.objects.filter(id=x['set_type_id']).first().name, 'icon':x['icon']} for x in _data]
+        for d in data:
+            if d['icon'] is None:
+                d['icon'] = ''
         return render(
             request,
             'mtg/sets.html',
@@ -48,7 +52,7 @@ class mtg_set_list(View):
         )
 
 
-class mtg_view_set(View):
+class mtg_view_set(LoginRequiredMixin, View):
     def get(self, request, set_short):
         _temp = mtg.MTG_Set.objects.filter(shorthand=set_short).first()
         set_name = _temp.name
@@ -127,7 +131,7 @@ class mtg_view_set(View):
         return redirect('mtg_view_set', set_short=set_short)
 
 
-class mtg_my_sets(View):
+class mtg_my_sets(LoginRequiredMixin, View):
     def get(self, request):
         shorts = mtg.MTG_Collected.objects.filter(owner=request.user)
         # Get all unique set codes from above
@@ -143,6 +147,10 @@ class mtg_my_sets(View):
             d['single_card_collected_normal'] = len(collected_cards.filter(normal__gte=1))
             d['set_collected_normal'] = len(collected_cards.filter(normal__gte=4))
 
+            if d['icon'] is None:
+                d['icon'] = ''
+            
+
         return render(
             request,
             'mtg/collection_sets.html',
@@ -152,7 +160,7 @@ class mtg_my_sets(View):
         )
 
 
-class mtg_search_cards(View):
+class mtg_search_cards(LoginRequiredMixin, View):
     def get(self, request):
         form = MTGSearchForm()
         return render(
@@ -164,7 +172,7 @@ class mtg_search_cards(View):
         )
 
 
-class mtg_search_results(View):
+class mtg_search_results(LoginRequiredMixin, View):
     def get(self, request):
         cards = []
         query = Q()
@@ -175,7 +183,7 @@ class mtg_search_results(View):
         toughness_ = request.GET['toughness']
 
         if name_:
-            query &= Q(name=name_)
+            query &= Q(name__contains=name_)
         if converted_cost_:
             query &= Q(converted_cost=converted_cost_)
         if power_:
@@ -189,6 +197,7 @@ class mtg_search_results(View):
 
         # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
         if query != Q():
+            print(query)
             cards = cards + list(mtg.MTG_Card.objects.filter(query))
 
         if types_:
@@ -235,6 +244,7 @@ class mtg_search_results(View):
             card_dict['text'] =  c.text or ''
             card_dict['flavor'] = c.flavor or ''
             card_dict['rarity_id'] = c.rarity.name.capitalize()
+            card_dict['image'] = c.image
 
             type_line_str = ''
             type_line = mtg.MTG_TypeLine.objects.filter(card=c)
