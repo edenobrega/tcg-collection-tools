@@ -94,7 +94,7 @@ WSGI_APPLICATION = 'tcgct_main.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
-        'NAME': 'tcgct',
+        'NAME': 'tcgct_bravo',
         'HOST': 'DESKTOP-80083JA\SQLEXPRESS'
     }
 }
