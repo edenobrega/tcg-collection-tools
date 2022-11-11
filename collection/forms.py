@@ -12,3 +12,8 @@ class MTGSearchForm(forms.Form):
     power = forms.CharField(max_length=3, required=False)
     toughness = forms.CharField(max_length=3, required=False)
     search_collection = forms.BooleanField(initial=False, required=False)
+
+
+class MTGCreateCustomSetForm(forms.Form):
+    title = forms.CharField(min_length=1, max_length=200)
+    description = forms.CharField(max_length=2000)

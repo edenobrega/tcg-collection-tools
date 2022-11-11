@@ -76,3 +76,16 @@ class MTG_Collected(models.Model):
 
     def __str__(self):
         return f'{self.owner} | {self.card.name} | {self.card.card_set.shorthand} | {self.normal} | {self.foil}'
+
+
+class MTG_Custom_Set(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200, null=False)
+    description = models.TextField(max_length=2000, null=False)
+
+
+class MTG_Custom_Set_Cards(models.Model):
+    custom_set = models.ForeignKey(MTG_Custom_Set, on_delete=models.CASCADE)
+    card = models.ForeignKey(MTG_Card, on_delete=models.CASCADE)
+    normal = models.IntegerField()
+    foil = models.IntegerField()
