@@ -2,11 +2,11 @@ import json
 from django.shortcuts import render, redirect
 from django.views import View
 from collection.models import mtg
-from collection.forms import MTGSearchForm
+from collection.forms import MTGSearchForm, MTGCreateCustomSetForm
 from difflib import SequenceMatcher
 from django.db.models import Q
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from django.http import JsonResponse
 
 def similar(a, b):
     if a.lower() in b.lower() or b.lower() in a.lower():
@@ -271,3 +271,125 @@ class mtg_search_results(LoginRequiredMixin, View):
             }
         )
 
+
+class mtg_search_cards_json(View):
+    def get(self, request):
+        cards = []
+        query = Q()
+
+        if 'name' in request.GET:
+            query &= Q(name__contains=request.GET['name'])
+        if 'converted_cost' in request.GET:
+            query &= Q(converted_cost=request.GET['converted_cost'])
+        if 'power' in request.GET:
+            query &= Q(power=request.GET['power'])
+        if 'toughness' in request.GET:
+            query &= Q(toughness=request.GET['toughness'])
+
+        # TODO: filter first if has creature,enhancement,instant,sorcery,planeswalker
+        if query != Q():
+            print(query)
+            cards = cards + list(mtg.MTG_Card.objects.filter(query))
+
+        if 'types' in request.GET:
+            types = request.GET['types'].split(',')
+            if '—' in types:
+                types.remove('—')
+            if '//' in types:
+                types.remove('//')
+            if '' in types:
+                types.remove('')
+
+            types_set = set(types)     
+           
+            if cards == []:
+                type_ = mtg.MTG_CardType.objects.filter(name=types[-1])
+                # list of those that have atleast one of asked for type
+                typeline = mtg.MTG_TypeLine.objects.filter(type=type_.first())
+
+                for tl in typeline:
+                    ctypes = mtg.MTG_TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=tl.card)
+                    if len(ctypes) < len(types):
+                        continue
+                    type_line_list = [x.type.name for x in ctypes]
+                    if types_set.issubset(set(type_line_list)):
+                        cards.append(tl.card)
+            else:
+                cards_ = list(cards)
+                cards = []
+                for c in cards_:
+                    ctypes = mtg.MTG_TypeLine.objects.exclude(type__id__in=[2,50]).filter(card=c)
+                    if len(ctypes) < len(types):
+                        continue
+                    type_line_list = [x.type.name for x in ctypes]
+                    if types_set.issubset(set(type_line_list)):
+                        cards.append(c)
+
+        data = []
+        # TODO: should return the set of eachcard instead of collector number, thats useless when cards from multiple sets are mixed together        
+        for c in cards:
+            card_dict = {}
+            card_dict['collector_number'] = c.collector_number 
+            card_dict['name'] = c.name
+            card_dict['text'] =  c.text or ''
+            card_dict['flavor'] = c.flavor or ''
+            card_dict['rarity_id'] = c.rarity.name.capitalize()
+            card_dict['image'] = c.image
+
+            type_line_str = ''
+            type_line = mtg.MTG_TypeLine.objects.filter(card=c)
+            for tl in type_line:
+                type_line_str = type_line_str + tl.type.name.lower().capitalize() + ' '
+            card_dict['type_line'] = type_line_str.strip()
+            data.append(card_dict)
+        
+        return JsonResponse({'cards': data})
+
+    def post(self, request):
+        return JsonResponse({'cheeky':'monkey'})
+
+
+class mtg_create_custom_set(LoginRequiredMixin, View):
+    def get(self, request):
+        form = MTGCreateCustomSetForm()
+        return render(
+            request,
+            'mtg/create_set.html',
+            {
+                'form':form
+            }
+        )
+    def post(self, request):
+        form = MTGCreateCustomSetForm(request.POST)
+        if form.is_valid():
+            data = mtg.MTG_Custom_Set()
+            data.owner = request.user
+            data.title = form.cleaned_data['title']
+            data.description = form.cleaned_data['description']
+            data.save()
+        return redirect('mtg_custom_list')
+
+
+class mtg_list_custom_sets(LoginRequiredMixin, View):
+    def get(self, request):
+        data = mtg.MTG_Custom_Set.objects.filter(owner=request.user)
+        return render(
+            request,
+            'mtg/custom_sets.html',
+            {
+                'data':data
+            }
+        )
+
+
+class mtg_edit_custom_set(LoginRequiredMixin, View):
+    def get(self, request, id):
+        return render(
+            request,
+            'mtg/edit_set.html'
+        )
+
+
+
+class mtg_view_custom_set(LoginRequiredMixin, View):
+    pass
