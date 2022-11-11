@@ -11,7 +11,8 @@
     <a href="{% url 'mtg_set_list' %}" class="list-group-item list-group-item-action">View All Sets</a>
     <a href="{% url 'mtg_my_sets' %}" class="list-group-item list-group-item-action">View My Sets</a>
     <a href="{% url 'mtg_search' %}" class="list-group-item list-group-item-action">Search Cards</a>
-    <a href="#" class="list-group-item list-group-item-action disabled">N/A</a>
+    <a href="{% url 'mtg_custom_create' %}" class="list-group-item list-group-item-action">Create New Set</a>
+    <a href="{% url 'mtg_custom_list' %}" class="list-group-item list-group-item-action">View Custom Sets</a>
 </div>
 
 {% endblock %}

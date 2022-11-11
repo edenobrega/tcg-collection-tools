@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<table>
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Update Collection</th>
+            <th>Edit Base Collection</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for d in data %}
+        <tr>
+            <td>{{d.title}}</td>
+            <td>{{d.description}}</td>
+            <td>Update</td>
+            <td><a href="{% url 'mtg_custom_edit' d.id %}">Edit</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
